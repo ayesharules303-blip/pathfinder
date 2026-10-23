@@ -154,10 +154,9 @@ if(!db){db=new SQL.Database();db.exec($("seed").textContent)}
 C=Q("SELECT id,name,blurb FROM careers ORDER BY id",null,1).map(function(r){return{n:r.name,b:r.blurb,t:Q("SELECT tag FROM tags WHERE career_id=?",[r.id],1).map(function(x){return x.tag}),s:Q("SELECT skill FROM skills WHERE career_id=?",[r.id],1).map(function(x){return x.skill}),p:Q("SELECT stage,detail FROM steps WHERE career_id=? ORDER BY ord",[r.id],1).map(function(x){return x.stage+": "+x.detail})}});
 saved=Q("SELECT career_id FROM saved",null,1).map(function(r){return r.career_id-1});mine=Q("SELECT text FROM strengths ORDER BY id",null,1).map(function(r){return r.text});
 $("cnt").textContent=saved.length;drawChips();drawSQL()}
-$("sqlb").onclick=function(){$("sqlp").classList.toggle("on")};
 initSqlJs({locateFile:function(f){return "https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/"+f}}).then(boot).catch(function(){$("mini").innerHTML='<p class="hint">The database could not load. Open this file with an internet connection.</p>'});
 </script>
-<button id="sqlb" aria-label="Show database queries">SQL</button><div id="sqlp" aria-live="polite"></div>
+<button id="sqlb" onclick="document.getElementById('sqlp').classList.toggle('on')" aria-label="Show database queries">SQL</button><div id="sqlp" aria-live="polite"></div>
 <script type="text/plain" id="seed">-- PathFinder database (SQLite)
 CREATE TABLE careers(id INTEGER PRIMARY KEY, name TEXT NOT NULL, blurb TEXT NOT NULL);
 CREATE TABLE tags(career_id INTEGER REFERENCES careers(id), tag TEXT NOT NULL);
