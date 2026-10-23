@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PathFinder: discover your future</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f8f4;--surf:#fff;--ink:#102a2d;--mute:#5a6b6d;--line:#dfe5e0;--brand:#0f6b5e;--brand-ink:#fff;--sun:#ffc933;--tint:#e3f3ec;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0c1a1c;--surf:#132527;--ink:#eaf3ee;--mute:#9bb0ad;--line:#23393b;--brand:#4fd1b5;--brand-ink:#08201c;--tint:#17302f}}
+:root[data-theme="dark"]{--bg:#0c1a1c;--surf:#132527;--ink:#eaf3ee;--mute:#9bb0ad;--line:#23393b;--brand:#4fd1b5;--brand-ink:#08201c;--tint:#17302f}
+*,*::before,*::after{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 17px/1.55 "DM Sans",system-ui,sans-serif;min-height:100%}
+h1,h2,h3{font-family:"Bricolage Grotesque","DM Sans",system-ui,sans-serif;line-height:1.08;margin:0;letter-spacing:-.02em}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+nav{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:28px;height:68px}
+.logo{display:flex;align-items:center;gap:10px;font:700 22px "Bricolage Grotesque",sans-serif;background:none;border:0;padding:0}
+nav .links{display:flex;gap:6px;margin-left:auto}
+.nl{background:none;border:0;padding:9px 14px;border-radius:99px;color:var(--mute);font-weight:500}
+.nl:hover,.nl.on{background:var(--tint);color:var(--ink)}
+.btn{background:var(--brand);color:var(--brand-ink);border:0;border-radius:99px;padding:14px 26px;font-weight:700}
+.btn:hover{filter:brightness(1.08)}.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.saved{background:var(--sun);color:#3a2d00;border-radius:99px;padding:2px 9px;font-size:14px;font-weight:700;margin-left:6px}
+.view{display:none}.view.on{display:block}
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center;padding:72px 0 56px}
+.hero h1{font-size:clamp(40px,6vw,68px)}
+.hero p.lead{font-size:20px;color:var(--mute);max-width:520px;margin:22px 0 30px}
+.stage{background:var(--surf);border:1px solid var(--line);border-radius:28px;padding:28px;box-shadow:0 30px 60px -30px rgba(15,60,55,.35)}
+.stage h3{font-size:22px;margin-bottom:6px}.stage small{color:var(--mute)}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
+.chip{border:1.5px solid var(--line);background:var(--bg);border-radius:99px;padding:9px 16px;font-weight:500;transition:.15s}
+.chip.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.mini{display:grid;gap:10px;margin-top:6px}
+.mrow{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg);border-radius:14px}
+.mrow b{flex:1}.bar{width:90px;height:8px;border-radius:9px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;background:var(--brand);transition:width .4s}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:24px 0 72px}
+.step{padding:26px;border-top:3px solid var(--brand);background:var(--surf);border-radius:0 0 18px 18px}
+.step h3{font-size:22px;margin-bottom:8px}.step p{margin:0;color:var(--mute)}
+.band{background:var(--brand);color:var(--brand-ink);padding:56px 0}
+.band h2{font-size:clamp(28px,4vw,42px);max-width:760px}
+.sec{padding:48px 0 80px}.sec h2{font-size:clamp(30px,4vw,44px);margin-bottom:10px}.sec .sub{color:var(--mute);margin:0 0 28px}
+.quiz{max-width:720px;margin:0 auto}
+.prog{height:8px;background:var(--line);border-radius:9px;overflow:hidden;margin:0 0 30px}.prog i{display:block;height:100%;background:var(--sun);transition:width .3s}
+.opt{display:block;width:100%;text-align:left;background:var(--surf);border:1.5px solid var(--line);border-radius:18px;padding:18px 22px;margin:12px 0;font-size:18px;font-weight:500;transition:.15s}
+.opt:hover{border-color:var(--brand);transform:translateX(4px)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}
+.card{background:var(--surf);border:1px solid var(--line);border-radius:22px;padding:22px;text-align:left;display:flex;flex-direction:column;gap:10px;transition:.15s}
+.card:hover{border-color:var(--brand);transform:translateY(-3px)}
+.ico{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font:700 20px "Bricolage Grotesque",sans-serif;color:#102a2d}
+.card h3{font-size:21px}.card p{margin:0;color:var(--mute);font-size:15px}
+.match{font-weight:700;color:var(--brand)}
+.tags{display:flex;flex-wrap:wrap;gap:6px}.tag{font-size:13px;background:var(--tint);padding:3px 10px;border-radius:99px}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+.modal{position:fixed;inset:0;z-index:20;background:rgba(5,20,20,.6);display:none;align-items:flex-end;justify-content:center;padding:0}
+.modal.on{display:flex}
+.sheet{background:var(--surf);width:min(780px,100%);max-height:92vh;overflow:auto;border-radius:28px 28px 0 0;padding:34px;animation:up .28s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.sheet h2{font-size:36px;margin:12px 0 8px}.sheet h4{margin:26px 0 10px;font:700 18px "Bricolage Grotesque",sans-serif}
+.skills{display:flex;flex-wrap:wrap;gap:8px}.skills span{border:1.5px solid var(--line);border-radius:99px;padding:6px 14px;font-weight:500}
+.path{list-style:none;margin:0;padding:0 0 0 22px;border-left:3px solid var(--brand)}
+.path li{position:relative;padding:0 0 18px 18px}.path li::before{content:"";position:absolute;left:-31px;top:6px;width:14px;height:14px;border-radius:50%;background:var(--sun);border:3px solid var(--brand)}
+.path b{display:block}
+.row{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+.ring{width:120px;height:120px}
+.resh{display:flex;align-items:center;gap:26px;flex-wrap:wrap;margin-bottom:30px}
+.inp{flex:1;min-width:0;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:99px;padding:12px 18px;font:inherit}.chip .x{margin-left:8px;opacity:.7}.hint{color:var(--mute);margin:6px 0 0}.uses{font-size:14px;color:var(--mute)}
+footer{border-top:1px solid var(--line);padding:30px 0;color:var(--mute);font-size:15px}
+@media(max-width:820px){.hero{grid-template-columns:1fr;padding-top:36px}.steps{grid-template-columns:1fr}nav .links .nl:not(.on){display:none}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style><script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+<style>#sqlb{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:30;background:var(--ink);color:var(--bg);border:0;border-radius:99px;padding:10px 18px;font-weight:700}#sqlp{position:fixed;right:16px;bottom:calc(68px + env(safe-area-inset-bottom,0px));z-index:30;width:min(520px,calc(100% - 32px));max-height:60vh;overflow:auto;background:#0b1718;color:#cfeee4;border-radius:18px;padding:18px;display:none;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace}#sqlp.on{display:block}#sqlp b{color:#ffc933}#sqlp div{margin:0 0 8px;word-break:break-word}</style>
+</head><body>
+<nav><div class="wrap">
+<button class="logo" onclick="go('home')" aria-label="PathFinder home"><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="15" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M17 6l5 11-5 11-5-11z" fill="#ffc933" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>PathFinder</button>
+<div class="links"><button class="nl on" data-v="home" onclick="go('home')">Home</button><button class="nl" data-v="quiz" onclick="startQuiz()">Take the quiz</button><button class="nl" data-v="explore" onclick="go('explore')">Explore careers</button><button class="nl" data-v="saved" onclick="go('saved')">Saved<span class="saved" id="cnt">0</span></button></div>
+</div></nav>
+
+<main>
+<section class="view on" id="v-home"><div class="wrap">
+<div class="hero"><div>
+<h1>Not sure what you want to be? That’s a good place to start.</h1>
+<p class="lead">Tell us what you’re good at, in your own words. We’ll show careers that use those strengths and the routes into them. You decide where to go.</p>
+<button class="btn" onclick="document.getElementById('si').focus()">Add your strengths</button> <button class="btn ghost" onclick="startQuiz()">Not sure? Take the quiz</button></div>
+<div class="stage"><h3>What are you good at?</h3><small>Type your own strengths, one at a time. Add as many as you like.</small><form id="sf" style="display:flex;gap:8px;margin-top:16px" onsubmit="addS(event)"><input id="si" class="inp" placeholder="e.g. drawing, maths, listening" aria-label="Add a strength" autocomplete="off" maxlength="40"><button class="btn" type="submit">Add</button></form><div class="chips" id="chips"></div><div class="mini" id="mini" aria-live="polite"></div></div></div>
+<div class="steps"><div class="step"><h3>Share your strengths</h3><p>Type what you’re good at and what you enjoy, in your own words.</p></div><div class="step"><h3>See what uses them</h3><p>Careers that draw on your strengths, shown in no set order.</p></div><div class="step"><h3>Explore the route</h3><p>Skills to build and the education path for each profession.</p></div></div>
+</div>
+<div class="band"><div class="wrap"><h2>PathFinder doesn’t decide your future. It shows you possibilities you may never have considered.</h2></div></div></section>
+
+<section class="view" id="v-quiz"><div class="wrap sec"><div class="quiz" id="quizbox"></div></div></section>
+<section class="view" id="v-results"><div class="wrap sec" id="resbox"></div></section>
+<section class="view" id="v-explore"><div class="wrap sec"><h2>Explore careers</h2><p class="sub">Filter by what you enjoy, then open a career to see how to get there.</p><div class="filters" id="filters"></div><div class="grid" id="allgrid"></div></div></section>
+<section class="view" id="v-saved"><div class="wrap sec"><h2>Saved careers</h2><p class="sub">Your shortlist. Compare them when you talk with a parent, teacher or counselor.</p><div class="grid" id="savedgrid"></div></div></section>
+</main>
+<footer><div class="wrap">PathFinder is a student project prototype powered by SQLite. Career information is a general guide, so check requirements with your school or counselor.</div></footer>
+<div class="modal" id="modal" onclick="if(event.target===this)closeM()"><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+
+<script>
+var T={tech:"Building tech",create:"Creating",people:"Helping people",data:"Solving puzzles",lead:"Leading ideas",nature:"Nature and science"};
+var COL={tech:"#a8d8ff",create:"#ffc2d9",people:"#ffd9a0",data:"#c9c2ff",lead:"#ffe58a",nature:"#b4ecc4"};
+var C=[],db=null,LOG=[];
+var Q=[
+{q:"It’s a free Saturday. What sounds best?",o:[["Building or fixing something",{tech:2}],["Drawing, writing or making music",{create:2}],["Volunteering or helping a friend",{people:2}],["Exploring outdoors",{nature:2}]]},
+{q:"Which school task do you enjoy most?",o:[["Solving a hard problem",{data:2,tech:1}],["Presenting to the class",{lead:2,people:1}],["Designing the poster",{create:2}],["Lab or field work",{nature:2,data:1}]]},
+{q:"In a group project, you’re usually the one who…",o:[["Organizes everyone",{lead:2}],["Comes up with wild ideas",{create:2,lead:1}],["Checks that everyone is okay",{people:2}],["Handles the tricky technical part",{tech:2,data:1}]]},
+{q:"Which headline would you click?",o:[["New app changes how we learn",{tech:2,create:1}],["Local clinic helps 1,000 families",{people:2,nature:1}],["Startup grows from a dorm room",{lead:2,create:1}],["Scientists protect a rare reef",{nature:2,data:1}]]},
+{q:"What matters most in your future work?",o:[["Making a difference for people",{people:2}],["Being creative every day",{create:2}],["Solving real puzzles",{data:2,tech:1}],["Building something of my own",{lead:2,tech:1}]]}];
+var saved=[],ans=[],qi=0,sel={},mine=[];
+function $(i){return document.getElementById(i)}
+function go(v){document.querySelectorAll(".view").forEach(function(e){e.classList.toggle("on",e.id==="v-"+v)});document.querySelectorAll(".nl").forEach(function(b){b.classList.toggle("on",b.dataset.v===v)});if(v==="explore")drawAll();if(v==="saved")drawSaved();window.scrollTo(0,0)}
+function score(w){return C.map(function(c,i){var s=0;c.t.forEach(function(t){s+=w[t]||0});return{i:i,s:s}}).sort(function(a,b){return b.s-a.s})}
+function ico(c){return '<div class="ico" style="background:'+COL[c.t[0]]+'">'+c.n[0]+'</div>'}
+function card(i,m){var c=C[i];return '<button class="card" onclick="openC('+i+')">'+ico(c)+'<h3>'+c.n+'</h3>'+(typeof m==="string"?'<span class="uses">'+m+'</span>':'')+'<p>'+c.b+'</p><div class="tags">'+c.t.map(function(t){return '<span class="tag">'+T[t]+'</span>'}).join("")+'</div></button>'}
+function drawMini(){var w={};Object.keys(sel).forEach(function(k){if(sel[k])w[k]=1});var r=score(w).slice(0,3),max=Math.max(1,r[0].s);var any=Object.keys(w).length;
+$("mini").innerHTML=r.map(function(x){var p=any?Math.round(x.s/max*100):0;return '<div class="mrow"><b>'+C[x.i].n+'</b><div class="bar"><i style="width:'+p+'%"></i></div></div>'}).join("")}
+$("chips").innerHTML=Object.keys(T).map(function(k){return '<button class="chip" data-k="'+k+'" aria-pressed="false">'+T[k]+'</button>'}).join("");
+$("chips").onclick=function(e){var k=e.target.dataset.k;if(!k)return;sel[k]=!sel[k];e.target.classList.toggle("on",sel[k]);e.target.setAttribute("aria-pressed",!!sel[k]);drawMini()};
+drawMini();
+var mine=[];
+function esc(s){return s.replace(/[&<>"']/g,function(c){return "&#"+c.charCodeAt(0)+";"})}
+function Q(s,p,nl){if(!nl){LOG.unshift(s.replace(/\s+/g," ").trim()+(p&&p.length?"   -- "+JSON.stringify(p):""));LOG.length=Math.min(LOG.length,8);drawSQL()}var st=db.prepare(s);if(p)st.bind(p);var r=[];while(st.step())r.push(st.getAsObject());st.free();return r}
+function X(s,p){LOG.unshift(s+(p&&p.length?"   -- "+JSON.stringify(p):""));LOG.length=Math.min(LOG.length,8);db.run(s,p);try{localStorage.setItem("pf_db",btoa(String.fromCharCode.apply(null,db.export())))}catch(e){}drawSQL()}
+function ids(s){var l=s.toLowerCase(),set={};Q("SELECT DISTINCT t.career_id id FROM keywords k JOIN tags t ON t.tag=k.tag WHERE ? LIKE '%'||k.word||'%'",[l]).forEach(function(r){set[r.id]=1});l.split(/[^a-z]+/).forEach(function(w){if(w.length>3)Q("SELECT DISTINCT career_id id FROM skills WHERE lower(skill) LIKE '%'||?||'%'",[w.slice(0,5)]).forEach(function(r){set[r.id]=1})});return Object.keys(set).map(Number)}
+function found(){var m={};mine.forEach(function(s){ids(s).forEach(function(id){(m[id]=m[id]||[]).push(s)})});return Object.keys(m).map(function(id){return{i:id-1,u:m[id]}}).sort(function(a,b){return b.u.length-a.u.length})}
+function drawSQL(){var p=$("sqlp");if(!p||!db)return;var n=Q("SELECT (SELECT COUNT(*) FROM careers) c,(SELECT COUNT(*) FROM skills) s,(SELECT COUNT(*) FROM steps) p,(SELECT COUNT(*) FROM saved) v,(SELECT COUNT(*) FROM strengths) m",null,1)[0];p.innerHTML='<div><b>SQLite database (running in your browser)</b></div><div>careers: '+n.c+' | skills: '+n.s+' | steps: '+n.p+' | saved: '+n.v+' | strengths: '+n.m+'</div><div><b>Latest queries</b></div>'+(LOG.length?LOG.map(function(l){return '<div>'+esc(l)+'</div>'}).join(""):'<div>None yet. Add a strength.</div>')}
+function drawChips(){$("chips").innerHTML=mine.map(function(s,i){return '<button class="chip on" onclick="rmS('+i+')" aria-label="Remove '+esc(s)+'">'+esc(s)+'<span class="x">×</span></button>'}).join("");drawMini()}
+function addS(e){e.preventDefault();var v=$("si").value.trim();if(db&&v&&mine.indexOf(v)<0&&mine.length<12){mine.push(v);X("INSERT OR IGNORE INTO strengths(text) VALUES(?)",[v])}$("si").value="";drawChips()}
+function rmS(i){X("DELETE FROM strengths WHERE text=?",[mine[i]]);mine.splice(i,1);drawChips()}
+function drawMini(){var r=found();if(!mine.length){$("mini").innerHTML='<p class="hint">Add a strength to see careers that use it.</p>';return}
+if(!r.length){$("mini").innerHTML='<p class="hint">No careers listed for those words yet. Try describing it another way, or browse all careers.</p><button class="btn ghost" onclick="go(\'explore\')">Browse all careers</button>';return}
+$("mini").innerHTML=r.slice(0,3).map(function(x){return '<div class="mrow"><div><b>'+C[x.i].n+'</b><div class="uses">Uses: '+x.u.map(esc).join(", ")+'</div></div></div>'}).join("")+'<button class="btn" style="margin-top:6px" onclick="showMine()">See all '+r.length+' careers that use your strengths</button>'}
+function showMine(){var r=found();$("resbox").innerHTML='<h2 style="margin-bottom:8px">Careers that use your strengths</h2><p class="sub">You told us: <b>'+mine.map(esc).join("</b>, <b>")+'</b>. These are possibilities to explore, shown in no set order. You choose what fits.</p><div class="grid">'+r.map(function(x){return card(x.i,"Uses your "+x.u.map(esc).join(", "))}).join("")+'</div><div class="row"><button class="btn ghost" onclick="go(\'home\')">Change my strengths</button><button class="btn ghost" onclick="go(\'explore\')">Browse all careers</button></div>';go("results")}
+drawChips();
+function startQuiz(){ans={};qi=0;go("quiz");drawQ()}
+function drawQ(){var q=Q[qi];$("quizbox").innerHTML='<p style="color:var(--mute);margin:0 0 10px">Question '+(qi+1)+' of '+Q.length+'</p><div class="prog"><i style="width:'+(qi/Q.length*100)+'%"></i></div><h2 style="font-size:clamp(28px,4vw,40px);margin-bottom:20px">'+q.q+'</h2>'+q.o.map(function(o,j){return '<button class="opt" onclick="pick('+j+')">'+o[0]+'</button>'}).join("")+(qi?'<button class="btn ghost" style="margin-top:14px" onclick="qi--;drawQ()">Back</button>':'')}
+var picks=[];
+function pick(j){picks[qi]=j;if(qi<Q.length-1){qi++;drawQ()}else results()}
+function results(){var w={};picks.forEach(function(j,i){var o=Q[i].o[j][1];for(var k in o)w[k]=(w[k]||0)+o[k]});var r=score(w),max=r[0].s||1;
+var top=r.slice(0,6),topTags=Object.keys(w).sort(function(a,b){return w[b]-w[a]}).slice(0,2).map(function(k){return T[k].toLowerCase()});
+$("resbox").innerHTML='<div class="resh"><svg class="ring" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="50" fill="none" stroke="var(--line)" stroke-width="12"/><circle cx="60" cy="60" r="50" fill="none" stroke="var(--brand)" stroke-width="12" stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="'+(314-314*top[0].s/max)+'" transform="rotate(-90 60 60)"/><text x="60" y="68" text-anchor="middle" font-size="26" font-weight="700" fill="currentColor">Done</text></svg><div><h2 style="margin-bottom:8px">Careers worth exploring</h2><p class="sub" style="margin:0">You lean toward <b>'+topTags.join("</b> and <b>")+'</b>. These are starting points, not answers.</p></div></div><div class="grid">'+top.map(function(x){return card(x.i,Math.max(40,Math.round(x.s/max*100)-(top.indexOf(x)?x===top[0]?0:Math.min(8,top.indexOf(x)*2):0)))}).join("")+'</div><div class="row"><button class="btn" onclick="startQuiz()">Retake the quiz</button><button class="btn ghost" onclick="go(\'explore\')">Browse all careers</button></div>';go("results")}
+var flt=null;
+function drawAll(){$("filters").innerHTML='<button class="chip'+(flt?'':' on')+'" onclick="flt=null;drawAll()">All</button>'+Object.keys(T).map(function(k){return '<button class="chip'+(flt===k?' on':'')+'" onclick="flt=\''+k+'\';drawAll()">'+T[k]+'</button>'}).join("");
+$("allgrid").innerHTML=C.map(function(c,i){return !flt||c.t.indexOf(flt)>-1?card(i):""}).join("")}
+function drawSaved(){$("savedgrid").innerHTML=saved.length?saved.map(function(i){return card(i)}).join(""):'<p style="grid-column:1/-1">Nothing saved yet. Open a career and choose Save career to build your shortlist.</p>'}
+function openC(i){var c=C[i],has=saved.indexOf(i)>-1;$("sheet").innerHTML=ico(c)+'<h2>'+c.n+'</h2><p style="color:var(--mute);margin:0">'+c.b+'</p><h4>Skills to build</h4><div class="skills">'+c.s.map(function(s){return '<span>'+s+'</span>'}).join("")+'</div><h4>How to get there</h4><ul class="path">'+c.p.map(function(p){var a=p.split(": ");return '<li><b>'+a[0]+'</b>'+a[1]+'</li>'}).join("")+'</ul><div class="row"><button class="btn" onclick="toggle('+i+')">'+(has?'Remove from saved':'Save career')+'</button><button class="btn ghost" onclick="closeM()">Close</button></div>';$("modal").classList.add("on")}
+function closeM(){$("modal").classList.remove("on")}
+function toggle(i){var k=saved.indexOf(i);if(k>-1){saved.splice(k,1);X("DELETE FROM saved WHERE career_id=?",[i+1])}else{saved.push(i);X("INSERT OR IGNORE INTO saved VALUES(?)",[i+1])}$("cnt").textContent=saved.length;openC(i);if(document.getElementById("v-saved").classList.contains("on"))drawSaved()}
+document.addEventListener("keydown",function(e){if(e.key==="Escape")closeM()});
+
+function boot(SQL){var raw=null;try{raw=localStorage.getItem("pf_db")}catch(e){}
+if(raw){try{db=new SQL.Database(Uint8Array.from(atob(raw),function(c){return c.charCodeAt(0)}));Q("SELECT 1 FROM careers",null,1)}catch(e){db=null}}
+if(!db){db=new SQL.Database();db.exec($("seed").textContent)}
+C=Q("SELECT id,name,blurb FROM careers ORDER BY id",null,1).map(function(r){return{n:r.name,b:r.blurb,t:Q("SELECT tag FROM tags WHERE career_id=?",[r.id],1).map(function(x){return x.tag}),s:Q("SELECT skill FROM skills WHERE career_id=?",[r.id],1).map(function(x){return x.skill}),p:Q("SELECT stage,detail FROM steps WHERE career_id=? ORDER BY ord",[r.id],1).map(function(x){return x.stage+": "+x.detail})}});
+saved=Q("SELECT career_id FROM saved",null,1).map(function(r){return r.career_id-1});mine=Q("SELECT text FROM strengths ORDER BY id",null,1).map(function(r){return r.text});
+$("cnt").textContent=saved.length;drawChips();drawSQL()}
+$("sqlb").onclick=function(){$("sqlp").classList.toggle("on")};
+initSqlJs({locateFile:function(f){return "https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/"+f}}).then(boot).catch(function(){$("mini").innerHTML='<p class="hint">The database could not load. Open this file with an internet connection.</p>'});
+</script>
+<button id="sqlb" aria-label="Show database queries">SQL</button><div id="sqlp" aria-live="polite"></div>
+<script type="text/plain" id="seed">-- PathFinder database (SQLite)
+CREATE TABLE careers(id INTEGER PRIMARY KEY, name TEXT NOT NULL, blurb TEXT NOT NULL);
+CREATE TABLE tags(career_id INTEGER REFERENCES careers(id), tag TEXT NOT NULL);
+CREATE TABLE skills(career_id INTEGER REFERENCES careers(id), skill TEXT NOT NULL);
+CREATE TABLE steps(career_id INTEGER REFERENCES careers(id), ord INTEGER, stage TEXT, detail TEXT);
+CREATE TABLE keywords(word TEXT PRIMARY KEY, tag TEXT NOT NULL);
+CREATE TABLE saved(career_id INTEGER PRIMARY KEY REFERENCES careers(id));
+CREATE TABLE strengths(id INTEGER PRIMARY KEY AUTOINCREMENT, text TEXT UNIQUE NOT NULL);
+INSERT INTO careers VALUES(1,'Software developer','Builds the apps, games and websites people use every day.');
+INSERT INTO tags VALUES(1,'tech');
+INSERT INTO tags VALUES(1,'data');
+INSERT INTO skills VALUES(1,'Logic and problem solving');
+INSERT INTO skills VALUES(1,'A programming language');
+INSERT INTO skills VALUES(1,'Teamwork');
+INSERT INTO skills VALUES(1,'Patience debugging');
+INSERT INTO steps VALUES(1,1,'School','maths and computer science');
+INSERT INTO steps VALUES(1,2,'Study','computer science degree, bootcamp or self-taught with projects');
+INSERT INTO steps VALUES(1,3,'Start','internship or junior developer role');
+INSERT INTO careers VALUES(2,'UX designer','Designs how apps and websites look, feel and work for real users.');
+INSERT INTO tags VALUES(2,'create');
+INSERT INTO tags VALUES(2,'tech');
+INSERT INTO tags VALUES(2,'people');
+INSERT INTO skills VALUES(2,'Visual design');
+INSERT INTO skills VALUES(2,'Empathy for users');
+INSERT INTO skills VALUES(2,'Prototyping tools');
+INSERT INTO skills VALUES(2,'Clear communication');
+INSERT INTO steps VALUES(2,1,'School','art, design, technology');
+INSERT INTO steps VALUES(2,2,'Study','design degree or online certificate plus a portfolio');
+INSERT INTO steps VALUES(2,3,'Start','junior designer or freelance projects');
+INSERT INTO careers VALUES(3,'Data analyst','Finds patterns in numbers to help organizations make better choices.');
+INSERT INTO tags VALUES(3,'data');
+INSERT INTO tags VALUES(3,'tech');
+INSERT INTO tags VALUES(3,'lead');
+INSERT INTO skills VALUES(3,'Statistics');
+INSERT INTO skills VALUES(3,'Spreadsheets and SQL');
+INSERT INTO skills VALUES(3,'Charts and storytelling');
+INSERT INTO skills VALUES(3,'Curiosity');
+INSERT INTO steps VALUES(3,1,'School','maths, statistics, economics');
+INSERT INTO steps VALUES(3,2,'Study','degree in a numbers-based subject or a data course');
+INSERT INTO steps VALUES(3,3,'Start','junior analyst or internship');
+INSERT INTO careers VALUES(4,'Nurse','Cares for patients and supports them and their families through treatment.');
+INSERT INTO tags VALUES(4,'people');
+INSERT INTO tags VALUES(4,'nature');
+INSERT INTO skills VALUES(4,'Compassion');
+INSERT INTO skills VALUES(4,'Calm under pressure');
+INSERT INTO skills VALUES(4,'Biology basics');
+INSERT INTO skills VALUES(4,'Teamwork');
+INSERT INTO steps VALUES(4,1,'School','biology, chemistry, English');
+INSERT INTO steps VALUES(4,2,'Study','nursing degree and licensing exam');
+INSERT INTO steps VALUES(4,3,'Start','hospital or clinic placement, then a specialty');
+INSERT INTO careers VALUES(5,'Teacher','Helps young people learn, grow and see what they are capable of.');
+INSERT INTO tags VALUES(5,'people');
+INSERT INTO tags VALUES(5,'lead');
+INSERT INTO tags VALUES(5,'create');
+INSERT INTO skills VALUES(5,'Explaining ideas simply');
+INSERT INTO skills VALUES(5,'Patience');
+INSERT INTO skills VALUES(5,'Planning');
+INSERT INTO skills VALUES(5,'Listening');
+INSERT INTO steps VALUES(5,1,'School','strong grades in the subject you love');
+INSERT INTO steps VALUES(5,2,'Study','degree plus teaching qualification');
+INSERT INTO steps VALUES(5,3,'Start','classroom placement, then your first post');
+INSERT INTO careers VALUES(6,'Environmental scientist','Studies ecosystems and designs solutions to protect them.');
+INSERT INTO tags VALUES(6,'nature');
+INSERT INTO tags VALUES(6,'data');
+INSERT INTO skills VALUES(6,'Field research');
+INSERT INTO skills VALUES(6,'Data analysis');
+INSERT INTO skills VALUES(6,'Biology and chemistry');
+INSERT INTO skills VALUES(6,'Report writing');
+INSERT INTO steps VALUES(6,1,'School','biology, geography, chemistry');
+INSERT INTO steps VALUES(6,2,'Study','environmental science or ecology degree');
+INSERT INTO steps VALUES(6,3,'Start','research assistant or conservation role');
+INSERT INTO careers VALUES(7,'Civil engineer','Plans and builds bridges, roads, water systems and the places we live.');
+INSERT INTO tags VALUES(7,'tech');
+INSERT INTO tags VALUES(7,'nature');
+INSERT INTO tags VALUES(7,'lead');
+INSERT INTO skills VALUES(7,'Maths and physics');
+INSERT INTO skills VALUES(7,'Technical drawing');
+INSERT INTO skills VALUES(7,'Project management');
+INSERT INTO skills VALUES(7,'Safety mindset');
+INSERT INTO steps VALUES(7,1,'School','maths, physics');
+INSERT INTO steps VALUES(7,2,'Study','civil engineering degree');
+INSERT INTO steps VALUES(7,3,'Start','graduate engineer on a site or design team');
+INSERT INTO careers VALUES(8,'Entrepreneur','Turns an idea into a product or business and builds a team around it.');
+INSERT INTO tags VALUES(8,'lead');
+INSERT INTO tags VALUES(8,'create');
+INSERT INTO skills VALUES(8,'Taking initiative');
+INSERT INTO skills VALUES(8,'Selling an idea');
+INSERT INTO skills VALUES(8,'Money basics');
+INSERT INTO skills VALUES(8,'Resilience');
+INSERT INTO steps VALUES(8,1,'School','business, maths, any project you can start');
+INSERT INTO steps VALUES(8,2,'Study','optional, many learn by building and mentoring');
+INSERT INTO steps VALUES(8,3,'Start','a small side project with real customers');
+INSERT INTO careers VALUES(9,'Psychologist','Studies how people think and feel, and helps them through hard times.');
+INSERT INTO tags VALUES(9,'people');
+INSERT INTO tags VALUES(9,'data');
+INSERT INTO tags VALUES(9,'nature');
+INSERT INTO skills VALUES(9,'Listening');
+INSERT INTO skills VALUES(9,'Research methods');
+INSERT INTO skills VALUES(9,'Empathy');
+INSERT INTO skills VALUES(9,'Ethics');
+INSERT INTO steps VALUES(9,1,'School','biology, maths, social science');
+INSERT INTO steps VALUES(9,2,'Study','psychology degree, then specialist training');
+INSERT INTO steps VALUES(9,3,'Start','assistant or supervised practice');
+INSERT INTO careers VALUES(10,'Journalist','Finds, checks and tells stories that matter to communities.');
+INSERT INTO tags VALUES(10,'create');
+INSERT INTO tags VALUES(10,'people');
+INSERT INTO tags VALUES(10,'lead');
+INSERT INTO skills VALUES(10,'Writing');
+INSERT INTO skills VALUES(10,'Interviewing');
+INSERT INTO skills VALUES(10,'Fact-checking');
+INSERT INTO skills VALUES(10,'Curiosity');
+INSERT INTO steps VALUES(10,1,'School','English, media, social studies');
+INSERT INTO steps VALUES(10,2,'Study','journalism or any degree plus a portfolio');
+INSERT INTO steps VALUES(10,3,'Start','student paper, internship or freelance pieces');
+INSERT INTO keywords VALUES('draw','create');
+INSERT INTO keywords VALUES('art','create');
+INSERT INTO keywords VALUES('design','create');
+INSERT INTO keywords VALUES('writ','create');
+INSERT INTO keywords VALUES('music','create');
+INSERT INTO keywords VALUES('creativ','create');
+INSERT INTO keywords VALUES('paint','create');
+INSERT INTO keywords VALUES('story','create');
+INSERT INTO keywords VALUES('math','data');
+INSERT INTO keywords VALUES('number','data');
+INSERT INTO keywords VALUES('puzzle','data');
+INSERT INTO keywords VALUES('logic','data');
+INSERT INTO keywords VALUES('analy','data');
+INSERT INTO keywords VALUES('science','nature');
+INSERT INTO keywords VALUES('biolog','nature');
+INSERT INTO keywords VALUES('animal','nature');
+INSERT INTO keywords VALUES('outdoor','nature');
+INSERT INTO keywords VALUES('environment','nature');
+INSERT INTO keywords VALUES('listen','people');
+INSERT INTO keywords VALUES('help','people');
+INSERT INTO keywords VALUES('empath','people');
+INSERT INTO keywords VALUES('caring','people');
+INSERT INTO keywords VALUES('teach','people');
+INSERT INTO keywords VALUES('talk','people');
+INSERT INTO keywords VALUES('commun','people');
+INSERT INTO keywords VALUES('lead','lead');
+INSERT INTO keywords VALUES('organi','lead');
+INSERT INTO keywords VALUES('present','lead');
+INSERT INTO keywords VALUES('speak','lead');
+INSERT INTO keywords VALUES('business','lead');
+INSERT INTO keywords VALUES('plan','lead');
+INSERT INTO keywords VALUES('code','tech');
+INSERT INTO keywords VALUES('comput','tech');
+INSERT INTO keywords VALUES('build','tech');
+INSERT INTO keywords VALUES('fix','tech');
+INSERT INTO keywords VALUES('tech','tech');
+INSERT INTO keywords VALUES('game','tech');
+INSERT INTO keywords VALUES('engineer','tech');
+</script></body></html>
